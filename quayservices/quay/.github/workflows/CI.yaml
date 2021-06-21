@@ -1,0 +1,212 @@
+name: CI
+on:
+  # See the documentation for more intricate event dispatch here:
+  # https://help.github.com/en/actions/reference/workflow-syntax-for-github-actions#on
+  push:
+    branches:
+    - "!dependabot/*"
+    - "*"
+  pull_request:
+    branches:
+    - "*"
+jobs:
+  build:
+    name: Format
+    runs-on: ubuntu-latest
+    steps:
+
+    - uses: actions/checkout@v2
+
+    - name: Set up Python 3.8
+      uses: actions/setup-python@v1
+      with:
+        python-version: 3.8
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install black==20.8b1
+        pip install flake8
+
+    - name: Check Formatting (Black)
+      run: |
+        black --line-length=100 --target-version=py38 --check --diff .
+
+    - name: Check Formatting (Flake8)
+      run: |
+        # The code-base needs to be cleaned up. There are too many Flake8
+        # related warnings now. We can at least use it for visibility purposes.
+        flake8 --exit-zero
+
+  unit:
+    name: Unit Test
+    runs-on: ubuntu-latest
+    steps:
+
+    - uses: actions/checkout@v2
+    - name: Set up Python 3.8
+      uses: actions/setup-python@v1
+      with:
+        python-version: 3.8
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install libgpgme-dev libldap2-dev libsasl2-dev swig
+        python -m pip install --upgrade pip
+        cat requirements-dev.txt | grep tox | xargs pip install
+
+    - name: tox
+      run: tox -e py38-unit
+
+  registry:
+    name: E2E Registry Tests
+    runs-on: ubuntu-latest
+    steps:
+
+    - uses: actions/checkout@v2
+    - name: Set up Python 3.8
+      uses: actions/setup-python@v1
+      with:
+        python-version: 3.8
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install libgpgme-dev libldap2-dev libsasl2-dev swig
+        python -m pip install --upgrade pip
+        cat requirements-dev.txt | grep tox | xargs pip install
+
+    - name: tox
+      run: tox -e py38-registry
+
+  docker:
+    name: Docker Build
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Docker Build
+      env:
+       DOCKER_BUILDKIT: 1
+      run: docker build .
+
+  mysql:
+    name: E2E MySQL Test
+    runs-on: ubuntu-latest
+    steps:
+
+    - uses: actions/checkout@v2
+    - name: Set up Python 3.8
+      uses: actions/setup-python@v1
+      with:
+        python-version: 3.8
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install libgpgme-dev libldap2-dev libsasl2-dev swig
+        sudo systemctl unmask docker
+        sudo systemctl start docker
+        docker version
+        python -m pip install --upgrade pip
+        cat requirements-dev.txt | grep tox | xargs pip install
+
+    - name: tox
+      run: tox -e py38-mysql
+
+  psql:
+    name: E2E Postgres Test
+    runs-on: ubuntu-latest
+    steps:
+
+    - uses: actions/checkout@v2
+    - name: Set up Python 3.6
+      uses: actions/setup-python@v1
+      with:
+        python-version: 3.8
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install libgpgme-dev libldap2-dev libsasl2-dev swig
+        sudo systemctl unmask docker
+        sudo systemctl start docker
+        docker version
+        python -m pip install --upgrade pip
+        cat requirements-dev.txt | grep tox | xargs pip install
+
+    - name: tox
+      run: tox -e py38-psql
+
+  oci:
+    name: OCI Conformance
+    runs-on: ubuntu-latest
+    steps:
+
+    - uses: actions/checkout@v2
+    - uses: actions/checkout@v2
+      with:
+        repository: opencontainers/distribution-spec
+        path: dist-spec
+
+    - name: Set up Python 3.8
+      uses: actions/setup-python@v1
+      with:
+        python-version: 3.8
+
+    - name: Set up Go 1.14
+      uses: actions/setup-go@v1
+      with:
+        go-version: 1.14
+
+    - name: Set GOPATH
+      run: |
+        # temporary fix for https://github.com/actions/setup-go/issues/14
+        echo "GOPATH=$(dirname $GITHUB_WORKSPACE)" >> $GITHUB_ENV
+        echo "$(dirname $GITHUB_WORKSPACE)/bin" >> $GITHUB_PATH
+
+    - name: Install dependencies
+      run: |
+        # Quay
+        sudo apt-get update
+        sudo apt-get install libgpgme-dev libldap2-dev libsasl2-dev swig
+        python -m pip install --upgrade pip
+        pip install -r <(cat requirements.txt requirements-dev.txt)
+
+        # Conformance
+        cd dist-spec/conformance
+        go mod vendor
+        CGO_ENABLED=0 go test -c -o conformance.test
+
+    - name: conformance
+      env:
+        TEST: 'true'
+        PYTHONPATH: '.'
+      run: TEST=true PYTHONPATH=. pytest test/registry/conformance_tests.py -s -vv
+
+    - name: Copy report
+      run: mkdir -p .report/ && mv {report.html,junit.xml} .report/
+      if: always()
+
+    - name: Upload test results
+      uses: actions/upload-artifact@v1
+      with:
+        name: oci-test-results-${{ github.sha }}
+        path: .report/
+      if: always()
+
+  commit-check:
+    name: Commit Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: commit check
+        uses: gsactions/commit-message-checker@v1
+        with:
+          pattern: |
+            ^(.*):\s*(.*)\s(\(PROJQUAY-[0-9]+\))(\s\(#[0-9]+\))?\n(\n(\n|.)*)?$
+          error: 'Commit must begin with <scope>: <subject> (PROJQUAY-####)'
+          flags: 'gm'
+          excludeTitle: true
+          excludeDescription: true
+          checkAllCommitMessages: true
+          accessToken: ${{ secrets.GITHUB_TOKEN }}

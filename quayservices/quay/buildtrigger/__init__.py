@@ -1,0 +1,4 @@
+import buildtrigger.bitbuckethandler
+import buildtrigger.customhandler
+import buildtrigger.githubhandler
+import buildtrigger.gitlabhandler
