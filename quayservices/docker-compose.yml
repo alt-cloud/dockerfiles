@@ -1,0 +1,60 @@
+version: '3'
+services:
+  config:
+    #image: quay.io/redhat/quay:v3.2.1
+    image:  localhost/quay  
+    #container_name: config
+    #restart: always
+    #privileged: true
+    #networks:
+      #- quay
+    ports:
+      - 8443:8443
+    environment:
+      - DEBUGLOG=false
+    command:
+      ["config", "redhat"]
+    #depends_on:
+      #- pgsql
+      #- redis
+      
+  pgsql:
+    #image: registry.access.redhat.com/rhscl/postgresql-96-rhel7
+    image: localhost/quay_postgres
+    #container_name: pgsql
+    #restart: always
+    #privileged: true
+    volumes:
+      #- /var/lib/pgsql/data:/var/lib/pgsql/data:Z
+      - postgresdb:/var/lib/pgsql/data:Z
+      - ./post-pgsql.sh:/usr/local/bin/post-pgsql.sh
+    networks:
+      - quay
+    #ports:
+      #- 5432:5432
+    environment:
+      - POSTGRESQL_USER=quayuser
+      - POSTGRESQL_PASSWORD=quaypass
+      - POSTGRESQL_DATABASE=quaydb
+  redis:
+    #image: registry.access.redhat.com/rhscl/redis-32-rhel7
+    image: localhost/quay_redis
+    #container_name: redis
+    #restart: always
+    privileged: true
+    volumes:
+      #- /var/lib/redis:/var/lib/redis/data:Z
+      - redis:/var/lib/redis/data:Z
+    networks:
+      - quay
+    #ports:
+      #- 6379:6379
+    depends_on:
+      - pgsql
+networks:
+  quay:
+    external: false
+
+volumes:
+  postgresdb:
+  redis:
