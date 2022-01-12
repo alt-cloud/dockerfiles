@@ -1,0 +1,3 @@
+[submodule "quayservices/quay"]
+	path = quayservices/quay
+	url = https://github.com/quay/quay
