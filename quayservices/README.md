@@ -26,6 +26,15 @@ Submodule path 'quay': checked out 'xxx...'
 
 Для авторизации укажите пароль, указанный после параметра `config` а раскомментированной строке (`Htubcnhfnjh`).
 
+В разделе `Server configuration` укажите имя сервиса (`quay`).
 ![](./Images/quaySet.png)
+
+В разделе `Database` выберите тип базы `Postgres` и введите указанные значения. Укажите пароль `Htubcnhfnjh`. 
 ![](./Images/postgresSet.png)
+
+В разделе `Redis` укажите имя сервиса `quayredis`:
 ![](./Images/redisSet.png)
+
+После ввода минимально необходимых параметров нажмите на появившейся внизу клавише `Validate Configuration Changes`. В случае корректного ввода параметов во всплывающем окне появится надпись `Configuration Validated`: 
+![](./Images/validateConfig.png)
+
