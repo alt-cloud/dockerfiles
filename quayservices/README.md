@@ -38,3 +38,26 @@ Submodule path 'quay': checked out 'xxx...'
 После ввода минимально необходимых параметров нажмите на появившейся внизу клавише `Validate Configuration Changes`. В случае корректного ввода параметов во всплывающем окне появится надпись `Configuration Validated`: 
 ![](./Images/validateConfig.png)
 
+Нажмите на клавишу `Download` и загрузите tar-архив конфигурации на локальный компьютер (обычно в `~/Загрузки/quay-config.tar.gz`)
+
+Остановите стек сервисов:
+```
+$ stop.sh
+```
+
+Под суперпользователем перейдите в каталог:
+```
+# cd /var/lib/docker/volumes/quay_quay_config/_data
+```
+
+Разархивируйте файл конфигурации:
+```
+# tar xvzf .../quay-config.tar.gz
+```
+
+Вернитесь в каталог `dockerfiles/quayservices`, закомментируйте в
+`docker-compose.yml` строку 
+```
+    #command: config Htubcnhfnjh
+``` 
+и запустите сервисы скриптом `start.sh`.
