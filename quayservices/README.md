@@ -13,6 +13,15 @@ Cloning into '.../dockerfiles/quayservices/quay'...
 Submodule path 'quay': checked out 'xxx...'
 ```
 
+## Сборка образов quay, postgres, redis
+
+Перейдите в каталог `dockerfiles/quayservices/` и вызовите скрипт
+```
+$ build.sh
+```
+Скрипт последовательно вызовет скрипты `build.sh` в каталогах 
+`quay`, `postgres`, `redis` собирая соответсвующие образы.
+
 ## Минимальные действия для конфигурации и запуску quay в docker-compose
 
 Перейдите в каталог `quayservices/` и раскомментируйте в файле `docker-compose.yml` строку 
