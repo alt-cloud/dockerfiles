@@ -3,7 +3,7 @@ version: '3.2'
 services:
   quay:
     image: localhost/quay:devel
-    #command: config Mypass
+    command: config Mypass
     volumes:
       - quay_config:/quay-registry/conf/stack
       - quay_datastorage:/datastorage
@@ -12,14 +12,14 @@ services:
       - 0.0.0.0:80:8080
       - 0.0.0.0:443:8443
 
-  redis:
-    image: redis
+  quayredis:
+    image: localhost/quay_redis
     volumes:
       - quay_redis_data:/data
 
 
-  postgres:
-    image: quay/postgres
+  quaydb:
+    image: localhost/quay_postgres
     volumes:
       - quay_postgres_data:/var/lib/pgsql/data
 
