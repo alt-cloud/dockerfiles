@@ -1,3 +1,3 @@
-#!/bin/sh 
-
-docker build -t localhost/quay_postgres .
+#!/bin/sh
+image=$1
+podman build -t $image .

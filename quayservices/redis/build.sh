@@ -1,3 +1,3 @@
-#!/bin/sh 
+#!/bin/sh
 
-docker build -t localhost/quay_redis .
+podman build -t localhost/quay/redis .

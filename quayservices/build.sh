@@ -1,19 +1,25 @@
 #!/bin/sh
+. ./.env
 
 cd postgres
 echo "Создание образа postgres"
-sh -x ./build.sh
+postgresImage=$regNS/quay/postgres
+sudo sh -x ./build.sh $postgresImage
+sudo podman save $postgresImage | docker load
+
 
 cd ../redis
+redisImage=$regNS/quay/redis
 echo "Создание образа redis"
-sh -x ./build.sh
+sudo sh -x ./build.sh $redisImage
+sudo podman save $redisImage | docker load
 
-cd quay
-TMP=/tmp/quay_$$.tar
-git checkout 162b79ec
+cd ../quay
+quayImage=$regNS/quay/quay
+git checkout $commitId
 echo "Создание образа quay"
-sh -x ./build.sh
-sudo podman save quay.io/quay/quay:162b79ec > $TMP
-docker load < $TMP
-rm -f $TMP
+sudo sh -x ./build.sh
+sudo podman tag quay/quay:$commitId $quayImage
+sudo podman save $quayImage | docker load
+
 
