@@ -20,3 +20,4 @@ Submodule path 'quay': checked out 'xxx...'
     command: config Htubcnhfnjh
 ``` 
 
+~[](./Images/postgresSet.png)
