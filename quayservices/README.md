@@ -19,6 +19,12 @@ Submodule path 'quay': checked out 'xxx...'
 ```
     command: config Htubcnhfnjh
 ``` 
+Запустите сервисы скриптом `start.sh`.
+
+В браузере обратитесь по URL `http://localhost/`.
+> Если порт `80` занят укахите другую привязку порта `8080` в файле `docker-compose.yml` (например `18080`) и укажите порт в URL `http://localhost:18080/`  
+
+Для авторизации укажите пароль, указанный после параметра `config` а раскомментированной строке (`Htubcnhfnjh`).
 
 ![](./Images/quaySet.png)
 ![](./Images/postgresSet.png)
