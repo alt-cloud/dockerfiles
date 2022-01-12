@@ -12,3 +12,11 @@ $ git submodule update
 Cloning into '.../dockerfiles/quayservices/quay'...
 Submodule path 'quay': checked out 'xxx...'
 ```
+
+## Минимальные действия для конфигурации и запуску quay в docker-compose
+
+Перейдите в каталог `quayservices/` и раскомментируйте в файле `docker-compose.yml` строку 
+```
+    command: config Htubcnhfnjh
+``` 
+
