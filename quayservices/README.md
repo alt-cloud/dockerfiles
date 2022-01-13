@@ -24,6 +24,8 @@ $ build.sh
 
 ## Минимальные действия для конфигурации и запуску quay в docker-compose
 
+### Конфигурация параметров сервера
+
 Перейдите в каталог `quayservices/` и раскомментируйте в файле `docker-compose.yml` строку 
 ```
     command: config Htubcnhfnjh
@@ -50,6 +52,8 @@ $ build.sh
 
 Нажмите на клавишу `Download` и загрузите tar-архив конфигурации на локальный компьютер (обычно в `~/Загрузки/quay-config.tar.gz`)
 
+### Запуск quay в минимальном варианте
+
 Остановите стек сервисов:
 ```
 $ stop.sh
@@ -71,3 +75,21 @@ $ stop.sh
     #command: config Htubcnhfnjh
 ``` 
 и запустите сервисы скриптом `start.sh`.
+
+### Добавление пользователей
+
+В браузере обратитесь по URL `http://localhost/`.
+> Если порт `80` занят укахите другую привязку порта `8080` в файле `docker-compose.yml` (например `18080`) и укажите порт в URL `http://localhost:18080/`  
+
+![](./Images/createAccount.png)
+
+![](./Images/defineAccount.png)
+
+![](./Images/listRepos.png)
+
+
+
+
+
+
+
