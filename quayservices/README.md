@@ -81,10 +81,13 @@ $ stop.sh
 В браузере обратитесь по URL `http://localhost/`.
 > Если порт `80` занят укахите другую привязку порта `8080` в файле `docker-compose.yml` (например `18080`) и укажите порт в URL `http://localhost:18080/`  
 
+Кликните клавишу `Create Account`:
 ![](./Images/createAccount.png)
 
+Задайте необходимые параметры входа:
 ![](./Images/defineAccount.png)
 
+Кликните по клавише `Create Account`. Отобразится начальное окно интарфейса:
 ![](./Images/listRepos.png)
 
 
