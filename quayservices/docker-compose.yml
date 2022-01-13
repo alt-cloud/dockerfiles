@@ -2,24 +2,24 @@ version: '3.2'
 
 services:
   quay:
-    image: localhost/quay:devel
+    image: ${regNS}/quay/quay
     command: config Htubcnhfnjh
     volumes:
       - quay_config:/quay-registry/conf/stack
       - quay_datastorage:/datastorage
       - quay_stack:/conf/stack
     ports:
-      - 0.0.0.0:80:8080
-      - 0.0.0.0:443:8443
+      - 0.0.0.0:${HTTPPORT}:8080
+      - 0.0.0.0:${HTTPSPORT}:8443
 
   quayredis:
-    image: localhost/quay_redis
+    image: localhost/quay/redis
     volumes:
       - quay_redis_data:/data
 
 
   quaydb:
-    image: localhost/quay_postgres
+    image: localhost/quay/postgres
     volumes:
       - quay_postgres_data:/var/lib/pgsql/data
 
