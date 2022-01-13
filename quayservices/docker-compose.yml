@@ -3,7 +3,7 @@ version: '3.2'
 services:
   quay:
     image: ${regNS}/quay/quay
-    command: config Htubcnhfnjh
+    #command: config Htubcnhfnjh
     volumes:
       - quay_config:/quay-registry/conf/stack
       - quay_datastorage:/datastorage
