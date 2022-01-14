@@ -28,6 +28,13 @@ $ build.sh
 ```
 Скрипт последовательно вызовет скрипты `build.sh` в каталогах 
 `quay`, `postgres`, `redis` собирая соответсвующие образы.
+В случае приведенного DNS-имени регистратора `altlinux.io` создадутся образы:
+```
+altlinux.io/quay/quay
+altlinux.io/quay/postgres
+altlinux.io/quay/redis
+```
+
 
 ## Минимальные действия для конфигурации и запуску quay в docker-compose
 
