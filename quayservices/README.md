@@ -15,6 +15,13 @@ Submodule path 'quay': checked out 'xxx...'
 
 ## Сборка образов quay, postgres, redis
 
+В файле `.env` в переменной `regNS` укажите DNS-имя регистратора.
+Например:
+```
+regNS=altlinux.io
+```
+DNS-имя должно быть зарегистрировано  как минимум в локальной сети на DNS-серверах.
+
 Перейдите в каталог `dockerfiles/quayservices/` и вызовите скрипт
 ```
 $ build.sh
