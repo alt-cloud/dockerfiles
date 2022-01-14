@@ -1,3 +1,3 @@
 #!/bin/sh
-
-podman build -t localhost/quay/redis .
+image=$1
+podman build -t $image .

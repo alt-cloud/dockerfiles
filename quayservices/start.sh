@@ -1,3 +1,8 @@
 #!/bin/sh
 
- docker-compose  -p QUAY up -d
+Stack=SERVICE_QUAY_REG
+
+docker-compose config > docker-swarm.yml
+docker stack  deploy -c docker-swarm.yml $Stack
+
+# docker-compose  -p QUAY up -d

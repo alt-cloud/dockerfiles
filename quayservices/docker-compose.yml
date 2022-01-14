@@ -7,25 +7,37 @@ services:
     volumes:
       - quay_config:/quay-registry/conf/stack
       - quay_datastorage:/datastorage
-      - quay_stack:/conf/stack
+        #- quay_stack:/conf/stack
     ports:
-      - 0.0.0.0:${HTTPPORT}:8080
-      - 0.0.0.0:${HTTPSPORT}:8443
+      - ${HTTPPORT}:8080
+      - ${HTTPSPORT}:8443
+    deploy:
+      placement:
+        constraints:
+        - node.hostname==node3.hub.ics.perm.ru
 
   quayredis:
-    image: localhost/quay/redis
+    image: ${regNS}/quay/redis
     volumes:
       - quay_redis_data:/data
+    deploy:
+      placement:
+        constraints:
+          - node.hostname==node3.hub.ics.perm.ru
 
 
   quaydb:
-    image: localhost/quay/postgres
+    image: ${regNS}/quay/postgres
     volumes:
       - quay_postgres_data:/var/lib/pgsql/data
+    deploy:    
+      placement:
+        constraints:
+          - node.hostname==node3.hub.ics.perm.ru
 
 volumes:
   quay_config:
   quay_datastorage:
-  quay_stack:
+  #quay_stack:
   quay_redis_data:
   quay_postgres_data:

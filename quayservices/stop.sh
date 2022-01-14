@@ -1,3 +1,3 @@
 #!/bin/sh
 
- docker-compose  -p QUAY down
+docker stack rm SERVICE_QUAY_REG
