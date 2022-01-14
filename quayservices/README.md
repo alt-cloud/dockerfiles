@@ -90,7 +90,35 @@ $ stop.sh
 Кликните по клавише `Create Account`. Отобразится начальное окно интерфейса:
 ![](./Images/listRepos.png)
 
+### Размещение образ в репозитории
 
+Зарегистрируйтесь в репозитории:
+```
+# podman login --tls-verify=false altlinux.io 
+Username: quay
+Password: xxxx
+Login Succeeded!
+```
+
+Разместите в репозитории созданные образы:
+```
+# podman push --tls-verify=false altlinux.io/quay/quay 
+...
+Writing manifest to image destitation
+Storing signatures
+
+# podman push --tls-verify=false altlinux.io/quay/postgres 
+...
+Writing manifest to image destitation
+Storing signatures
+
+# podman push --tls-verify=false altlinux.io/quay/redis 
+...
+Writing manifest to image destitation
+Storing signatures
+```
+Перегрузите страницу списка репозиториев:
+![](./Images/listFilledRepos.png)
 
 
 
