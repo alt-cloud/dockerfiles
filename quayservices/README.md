@@ -135,7 +135,8 @@ Storing signatures
 Перегрузите страницу списка репозиториев:
 ![](./Images/listFilledRepos.png)
 
+## Ссылки
 
-
+- [How to manage Linux container registries](https://www.redhat.com/sysadmin/manage-container-registries)
 
 
