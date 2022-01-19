@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -Eeo pipefail
 # TODO swap to -Eeuo pipefail above (after handling all potentially-unset variables)
-# set -x
+set -x
 
 # usage: file_env VAR [DEFAULT]
 #    ie: file_env 'XYZ_DB_PASSWORD' 'example'
@@ -29,6 +29,8 @@ if [ "${1:0:1}" = '-' ]; then
 	set -- postgres "$@"
 fi
 
+export POSTGRES_USER POSTGRES_PASSWORD POSTGRES_DB POSTGRES_INITDB_ARGS POSTGRES_INITDB_WALDIR POSTGRES_HOST_AUTH_METHOD PGDATA
+
 # allow the container to be started with `--user`
 if [ "$1" = 'postgres' ] && [ "$(id -u)" = '0' ]; then
 	mkdir -p "$PGDATA"
@@ -46,11 +48,13 @@ if [ "$1" = 'postgres' ] && [ "$(id -u)" = '0' ]; then
 		chmod 700 "$POSTGRES_INITDB_WALDIR"
 	fi
 
-	exec gosu postgres "$BASH_SOURCE" "$@"
+	#exec gosu postgres "$BASH_SOURCE" "$@"
+  exec su postgres -s /bin/bash -c "\"$BASH_SOURCE\" \"$@\""
+
 fi
 
 if [ "$1" = 'postgres' ]; then
-	mkdir -p "$PGDATA"
+	mkdir -p "$PGDATA" || :
 	chown -R "$(id -u)" "$PGDATA" 2>/dev/null || :
 	chmod 700 "$PGDATA" 2>/dev/null || :
 
@@ -163,6 +167,7 @@ if [ "$1" = 'postgres' ]; then
 
 		PGUSER="${PGUSER:-postgres}" \
 		pg_ctl -D "$PGDATA" -m fast -w stop
+		echo "listen_addresses = '*'" >> /var/lib/pgsql/data/postgresql.conf
 
 		echo
 		echo 'PostgreSQL init process complete; ready for start up.'
