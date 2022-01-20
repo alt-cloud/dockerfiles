@@ -1,14 +1,21 @@
 #!/bin/sh
 
+case $BUILDER in
+  docker | podman ) :;;
+  *)
+  BUILDER=docker
+esac
 if [ -z "$PLATFORM" ]
 then
-  echo "Environment variable PLATFORM is not defined"
-  exit 1
+  PLATFORM=p10
+#   echo "Environment variable PLATFORM is not defined"
+#   exit 1
 fi
 if [ -z "$VERSION" ]
 then
-  echo "Environment variable VERSION is not defined"
-  exit 1
+  VERSION=14
+#   echo "Environment variable VERSION is not defined"
+#   exit 1
 fi
 
-docker build  --build-arg VERSION=$VERSION --build-arg PLATFORM=$PLATFORM -t quay.io/altlinux/quay/postgres$VERSION:$PLATFORM .
+$BUILDER build  --build-arg VERSION=$VERSION --build-arg PLATFORM=$PLATFORM -t quay.io/altlinux/quay/postgres$VERSION:$PLATFORM .
