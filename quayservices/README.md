@@ -37,6 +37,56 @@ altlinux.io/quay/redis
 
 ## Запуск quay через docker-compose (минимальная конфигурация)
 
+docker-compose.yml:
+```
+version: '3.2'
+
+services:
+  quay:
+    image: ${regNS}/quay/quay
+    #command: config Htubcnhfnjh
+    volumes:
+      - quay_config:/quay-registry/conf/stack
+      - quay_datastorage:/datastorage
+    ports:
+      - ${HTTPPORT}:8080
+      - ${HTTPSPORT}:8443
+
+  quayredis:
+    image: ${regNS}/quay/redis
+    volumes:
+      - quay_redis_data:/data
+
+  quaydb:
+    image: ${regNS}/quay/postgres
+    volumes:
+      - quay_postgres_data:/var/lib/pgsql/data
+
+volumes:
+  quay_config:
+  quay_datastorage:
+  quay_redis_data:
+  quay_postgres_data:
+```
+Переменные `regNS`, `HTTPPORT`, `HTTPSPORT` импортируются из файла `.env`:
+```
+regNS=altlinux.io
+commitId=162b79ec
+HTTPPORT=80
+HTTPSPORT=443
+``` 
+Запуск `docker-compose.yml` скриптом `start.sh`:
+```
+docker-compose  -p QUAY up -d
+```
+
+При запуске создаются три сервиса:
+- `quayredis` - redis-хранилище ключ-значение с именованым томом  `quay_redis_data` монтируемый в каталог `/data`;
+- `quaydb` - postges-сервер с именованым томом `quay_postgres_data` монтируемый в каталог `/var/lib/pgsql/data`;
+- `quay` - регистратор `quay` доступный по внешним портам `80`, `443` с именоваными томами:
+  * `quay_config` монтируемый в каталог `/quay-registry/conf/stack`;
+  * `quay_datastorage` монтируемый в каталог `/datastorage`.
+
 ### Конфигурация параметров сервера
 
 Перейдите в каталог `quayservices/` и раскомментируйте в файле `docker-compose.yml` строку 
