@@ -23,4 +23,3 @@ CMD [ "postgres" ]
 EXPOSE 5432/tcp
 
 VOLUME [ "/var/lib/pgsql/data" ]
-
