@@ -1,8 +1,8 @@
-ARG PLATFORM
+ARG PLATFORM=p10
 
 FROM  quay.io/altlinux/alt:${PLATFORM}
 
-ARG VERSION
+ARG VERSION=14
 
 RUN \
   apt-get update; \
