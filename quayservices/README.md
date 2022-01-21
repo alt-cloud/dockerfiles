@@ -133,10 +133,12 @@ Storing signatures
 Writing manifest to image destitation
 Storing signatures
 
-## Запуск quay в kubernetes
 ```
 Перегрузите страницу списка репозиториев:
 ![](./Images/listFilledRepos.png)
+
+## Запуск quay в kubernetes
+
 
 ## Ссылки
 
