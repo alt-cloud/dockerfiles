@@ -370,7 +370,6 @@ spec:
       targetPort: 5432
   selector:
     quay-component: postgres
-
 ```
 
 Все описанные манифесты располагаются в каталоге `postgres` и запускаются командой
