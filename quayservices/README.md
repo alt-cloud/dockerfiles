@@ -194,7 +194,7 @@ Storing signatures
 Перегрузите страницу списка репозиториев:
 ![](./Images/listFilledRepos.png)
 
-## Запуск quay в kubernetes (минимальная конфигурация)
+## Запуск регистратора quay в kubernetes (минимальная конфигурация)
 
 ### Предварительный настройки
 
@@ -211,6 +211,34 @@ Storing signatures
 Образ `altlinux.io/quay/redis` не предъявляет особенных требований.
 
 #### Настройка файла /etc/containers/registries.conf конфигурации регистраторов
+
+Для работы с регистратором по локальной сети в режиме `insecure` (по протоколу `http`) в файле
+`/etc/containers/registries.conf` раскоментируйте описатель `[[registry]]` и добавьте нижеприведенные строки:
+
+```
+[[registry]]
+location = "altlinux.io"
+insecure = true
+```
+
+Кроме этого можно добавить домен `altlinux.io` в описатель `unqualified-search-registries`:
+```
+unqualified-search-registries = ['altlinux.io', 'docker.io', 'registry.fedoraproject.org', 'registry.access.redhat.com', 'registry.centos.org']
+```
+### Запуск сервисов
+
+#### Создание namespace `quay`
+
+#### Создание сервиса базы данных postgres
+
+#### Создание сервиса хранилища ключ-значение redis
+
+#### Запуск регистратора в режиме конфигурации
+
+#### Запуск сконфигурированного регистратора
+
+
+
 
 ## Ссылки
 
