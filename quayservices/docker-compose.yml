@@ -18,7 +18,7 @@ services:
 
   quaydb:
     image: ${regNS}/quay/postgres
-    env:
+    environment:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
