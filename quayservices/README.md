@@ -220,7 +220,7 @@ Storing signatures
 #### Настройка файла /etc/containers/registries.conf конфигурации регистраторов
 
 Для работы с регистратором по локальной сети в режиме `insecure` (по протоколу `http`) в файле
-`/etc/containers/registries.conf` раскоментируйте описатель `[[registry]]` и добавьте нижеприведенные строки:
+`/etc/containers/registries.conf`  на всех узлах раскоментируйте описатель `[[registry]]` и добавьте нижеприведенные строки:
 
 ```
 [[registry]]
@@ -232,6 +232,7 @@ insecure = true
 ```
 unqualified-search-registries = ['altlinux.io', 'docker.io', 'registry.fedoraproject.org', 'registry.access.redhat.com', 'registry.centos.org']
 ```
+
 ### Запуск сервисов
 
 #### Создание namespace quay
@@ -243,6 +244,128 @@ kubectl create ns quay
 ```
 
 #### Создание сервиса базы данных postgres
+
+
+`postgres/configmap.yaml`:
+```
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-config
+  namespace: quay
+  labels:
+    quay-component: postgres
+data:
+  POSTGRES_DB: registry
+  POSTGRES_USER: quayuser
+  POSTGRES_PASSWORD: Htubcnhfnjh
+```
+
+`postgres/deployment.yaml`:
+```
+#apiVersion: extensions/v1beta1
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres
+  namespace: quay
+  labels:
+    quay-component: postgres
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      quay-component: postgres
+  template:
+    metadata:
+      labels:
+        quay-component: postgres
+    spec:
+      containers:
+        - name: postgres
+          #image: postgres:10.4
+          image: altlinux.io/quay/postgres
+          #image: altlinux.io/quay/postgres14:p10
+          imagePullPolicy: "IfNotPresent"
+          ports:
+            - containerPort: 5432
+          envFrom:
+            - configMapRef:
+                name: postgres-config
+          volumeMounts:
+                  #- mountPath: /var/lib/postgresql/
+            - mountPath: /var/lib/pgsql/data
+              name: postgredb
+      volumes:
+        - name: postgredb
+          persistentVolumeClaim:
+            claimName: postgres-pv-claim
+
+            
+```
+
+`postgres/service.yaml`:
+```
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: quay
+  name: quaydb
+  labels:
+    quay-component: postgres
+spec:
+  ports:
+    - port: 5432
+      targetPort: 5432
+  selector:
+    quay-component: postgres
+
+```
+
+`postgres/storage.yaml`:
+```
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: pg-pv-volume
+  labels:
+    type: local
+    app: postgres
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteMany
+  hostPath:
+    path: "/var/lib/quaypostgres"
+    type: DirectoryOrCreate
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: kubernetes.io/hostname
+          operator: In
+          values:
+          - worker03 
+    
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: postgres-pv-claim
+  namespace: quay
+  labels:
+    quay-component: postgres          
+spec:
+  storageClassName: manual
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 10Gi
+```
+
 
 #### Создание сервиса хранилища ключ-значение redis
 
