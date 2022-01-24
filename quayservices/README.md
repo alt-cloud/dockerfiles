@@ -164,6 +164,10 @@ Password: xxxx
 Login Succeeded!
 ```
 
+> Если Вы планируете работать с клиентом `docker` через `docker daemon` флаг `--tls-verify=false` не используется.
+> Для работы по протоколу `http` добавьте флаг `--insecure-registry altlinux.io` в файл опций `/etc/sysconfig/docker` 
+> или в файл `/etc/docker/daemon.json` и перезапустите `docker daemon`.
+
 Разместите в репозитории созданные образы:
 ```
 # podman push --tls-verify=false altlinux.io/quay/quay 
