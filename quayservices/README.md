@@ -227,7 +227,13 @@ unqualified-search-registries = ['altlinux.io', 'docker.io', 'registry.fedorapro
 ```
 ### Запуск сервисов
 
-#### Создание namespace `quay`
+#### Создание namespace quay
+
+Для удобства работы все `kubernetes-ресурсы` будут создавать в `namespace` `quay`.
+Для этого необходимо создать данный `namespace`:
+```
+kubectl create ns quay
+```
 
 #### Создание сервиса базы данных postgres
 
