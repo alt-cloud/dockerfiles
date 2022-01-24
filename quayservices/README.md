@@ -245,6 +245,10 @@ kubectl create ns quay
 
 #### Создание сервиса базы данных postgres
 
+Так как в данном развертывании не используются внешние сетевые тома, то для базы данных (как и в случае `docker-compose`) 
+необходимо использовать локальный том (каталог) на одном из узлов.
+В данном случае используем тома типа `hostPath`.
+Опишем манифесты типа `PersistentVolume` (описание доступных томов) и PersistentVolumeClaim (запрос на том) в файле
 `postgres/storage.yaml`:
 ```
 kind: PersistentVolume
@@ -271,7 +275,6 @@ spec:
           operator: In
           values:
           - worker03 
-    
 ---
 kind: PersistentVolumeClaim
 apiVersion: v1
@@ -288,9 +291,11 @@ spec:
     requests:
       storage: 10Gi
 ```
+Манифест `PersistentVolume` описывает ресурс `pg-pv-volume` - каталог `/var/lib/quaypostgres` на узле `worker03`.
+По параметрам он удовлетворяет запросу `postgres-pv-claim`.
 
-
-`postgres/configmap.yaml`:
+Для инициализации необходимых пользователей и баз в файле `postgres/configmap.yaml` 
+сформирован манифест `ConfigMap` с именем `postgres-config` :
 ```
 apiVersion: v1
 kind: ConfigMap
@@ -304,10 +309,13 @@ data:
   POSTGRES_USER: quayuser
   POSTGRES_PASSWORD: Htubcnhfnjh
 ```
+`ConfigMap` обеспечивает экспорт переменных `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD`
+в среду запускаемого контейнера. Если в сосент запуска база данных (каталог `/var/lib/quaypostgres`)
+пуста, в базе данных создается указанынй пользователь и база данных. 
 
+Манифест разворачивния `postgres` описан в файле
 `postgres/deployment.yaml`:
 ```
-#apiVersion: extensions/v1beta1
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -341,11 +349,13 @@ spec:
         - name: postgredb
           persistentVolumeClaim:
             claimName: postgres-pv-claim
-
-            
 ```
+Манифест `postgres` с меткой `quay-component=postgres` запускает образ `altlinux.io/quay/postgres`
+на узле `worker03` с томом, удовлетворяющий запросу `claimName=postgres-pv-claim`. Образу при запуске
+будут перезаваться переменные, описанные в `configMap` с именем `postgres-config`.
 
-`postgres/service.yaml`:
+Для поддержки DNS-имени `quaydb` в файле `postgres/service.yaml` описан `CliusterIP`-сервис,
+привязывающий `POD` с меткой `quay-component=postgres` и портом `5432` к DNS имени `quaydb`:
 ```
 apiVersion: v1
 kind: Service
