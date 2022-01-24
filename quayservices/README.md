@@ -245,83 +245,6 @@ kubectl create ns quay
 
 #### Создание сервиса базы данных postgres
 
-
-`postgres/configmap.yaml`:
-```
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: postgres-config
-  namespace: quay
-  labels:
-    quay-component: postgres
-data:
-  POSTGRES_DB: registry
-  POSTGRES_USER: quayuser
-  POSTGRES_PASSWORD: Htubcnhfnjh
-```
-
-`postgres/deployment.yaml`:
-```
-#apiVersion: extensions/v1beta1
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: postgres
-  namespace: quay
-  labels:
-    quay-component: postgres
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      quay-component: postgres
-  template:
-    metadata:
-      labels:
-        quay-component: postgres
-    spec:
-      containers:
-        - name: postgres
-          #image: postgres:10.4
-          image: altlinux.io/quay/postgres
-          #image: altlinux.io/quay/postgres14:p10
-          imagePullPolicy: "IfNotPresent"
-          ports:
-            - containerPort: 5432
-          envFrom:
-            - configMapRef:
-                name: postgres-config
-          volumeMounts:
-                  #- mountPath: /var/lib/postgresql/
-            - mountPath: /var/lib/pgsql/data
-              name: postgredb
-      volumes:
-        - name: postgredb
-          persistentVolumeClaim:
-            claimName: postgres-pv-claim
-
-            
-```
-
-`postgres/service.yaml`:
-```
-apiVersion: v1
-kind: Service
-metadata:
-  namespace: quay
-  name: quaydb
-  labels:
-    quay-component: postgres
-spec:
-  ports:
-    - port: 5432
-      targetPort: 5432
-  selector:
-    quay-component: postgres
-
-```
-
 `postgres/storage.yaml`:
 ```
 kind: PersistentVolume
@@ -365,6 +288,81 @@ spec:
     requests:
       storage: 10Gi
 ```
+
+
+`postgres/configmap.yaml`:
+```
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-config
+  namespace: quay
+  labels:
+    quay-component: postgres
+data:
+  POSTGRES_DB: registry
+  POSTGRES_USER: quayuser
+  POSTGRES_PASSWORD: Htubcnhfnjh
+```
+
+`postgres/deployment.yaml`:
+```
+#apiVersion: extensions/v1beta1
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres
+  namespace: quay
+  labels:
+    quay-component: postgres
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      quay-component: postgres
+  template:
+    metadata:
+      labels:
+        quay-component: postgres
+    spec:
+      containers:
+        - name: postgres
+          image: altlinux.io/quay/postgres
+          imagePullPolicy: "IfNotPresent"
+          ports:
+            - containerPort: 5432
+          envFrom:
+            - configMapRef:
+                name: postgres-config
+          volumeMounts:
+            - mountPath: /var/lib/pgsql/data
+              name: postgredb
+      volumes:
+        - name: postgredb
+          persistentVolumeClaim:
+            claimName: postgres-pv-claim
+
+            
+```
+
+`postgres/service.yaml`:
+```
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: quay
+  name: quaydb
+  labels:
+    quay-component: postgres
+spec:
+  ports:
+    - port: 5432
+      targetPort: 5432
+  selector:
+    quay-component: postgres
+
+```
+
 
 
 #### Создание сервиса хранилища ключ-значение redis
