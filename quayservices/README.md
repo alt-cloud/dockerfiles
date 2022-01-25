@@ -377,6 +377,22 @@ spec:
 kubectl apply -f postgres/
 ```
 
+После загрузки и запуска образа `altlinux.io/quay/postgres` состояние ресурсов в `namespace` `quay` должно быть следующим:
+```
+# kubectl get all -o wide -n quay  
+NAME                            READY   STATUS    RESTARTS   AGE   IP           NODE       NOMINATED NODE   READINESS GATES
+pod/postgres-5cd7f757d6-4mhrq   1/1     Running   0          30s   10.244.4.3   worker03   <none>           <none>
+
+NAME             TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)    AGE   SELECTOR
+service/quaydb   ClusterIP   10.103.178.83   <none>        5432/TCP   30s   quay-component=postgres
+
+NAME                       READY   UP-TO-DATE   AVAILABLE   AGE   CONTAINERS   IMAGES                      SELECTOR
+deployment.apps/postgres   1/1     1            1           30s   postgres     altlinux.io/quay/postgres   quay-component=postgres
+
+NAME                                  DESIRED   CURRENT   READY   AGE   CONTAINERS   IMAGES                      SELECTOR
+replicaset.apps/postgres-5cd7f757d6   1         1         1       30s   postgres     altlinux.io/quay/postgres   pod-template-hash=5cd7f757d6,quay-component=postgres
+```
+
 #### Создание сервиса хранилища ключ-значение redis
 
 #### Запуск регистратора в режиме конфигурации
