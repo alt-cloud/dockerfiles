@@ -532,6 +532,68 @@ replicaset.apps/redis-855ccddfd       1         1         1       8s    redis   
 
 #### Запуск регистратора в режиме конфигурации
 
+При запуске регистратора в режиме конфигурации в физических томах нет необходимости. 
+Поэтому манифесты типа `PersistentVolume` и `PersistentVolumeClaim` не требуются. 
+Манифест разворачивния `redis` описан в файле `quay-config/deployment.yaml`:
+```
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: quay
+  name: quay-config-app
+  labels:
+    quay-component: config-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      quay-component: config-app
+  template:
+    metadata:
+      namespace: quay
+      labels:
+        quay-component: config-app
+    spec:
+      containers:
+      - name: quay-config-app
+        image: altlinux.io/quay/quay 
+        ports:
+        - containerPort: 8080
+        - containerPort: 8443
+        command: ["/quay-registry/quay-entrypoint.sh"]
+        args: ["config", "Htubcnhfnjh"]
+```
+При запуске стартовому скрипту контейнера передаются параметры `config Htubcnhfnjh`.
+В этом режиме регистратор поддерживает интерфейс конфигурации, описанный выше.
+
+Для обечпечения доступа к регистратору извне из WEB-браузера в файле `quay-config/service-nodeport.yaml` описывается сервис типа `NodePort`:
+```
+apiVersion: v1
+kind: Service
+metadata:
+  name: quay-config-service-np
+  namespace: quay
+spec:
+  ports:
+  - port: 8080
+    targetPort: 8080
+  selector:
+    quay-component: config-app
+  type: NodePort
+```
+Сервис обеспечивает выделение на master-узлах порта в диапазоне ` 30000-32767` и его проброс на порт
+`8080` `POD`а регистратора.
+Узнать номер выделенного порта можно командой:
+```
+# kubectl get svc -o wide -n quay  | grep quay-config-service-np
+quay-config-service-np   NodePort    10.102.8.32     <none>        8080:31945/TCP   31m    quay-component=config-app
+```
+Для конфигурации регистратора наберите в WEB-браузере `URL`: `http:<master_IP>:31945.
+Где `<master_IP>` - IP-адрес одного из master-узлов.
+
+Процесс конфигурирования описан выше в разделе запуска регистратора в `docker-compose`-режиме.
+После конфигурироваия скачайте архив конфигурации `quay-config.tar.gz`.
+
 #### Запуск сконфигурированного регистратора
 
 
