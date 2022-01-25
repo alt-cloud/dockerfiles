@@ -233,6 +233,12 @@ insecure = true
 unqualified-search-registries = ['altlinux.io', 'docker.io', 'registry.fedoraproject.org', 'registry.access.redhat.com', 'registry.centos.org']
 ```
 
+После корректировки необходимо рестартовать сервис `podman`:
+```
+systemctl restart podman
+```
+или перегрузить систему.
+
 ### Запуск сервисов
 
 #### Создание namespace quay
