@@ -233,9 +233,10 @@ insecure = true
 unqualified-search-registries = ['altlinux.io', 'docker.io', 'registry.fedoraproject.org', 'registry.access.redhat.com', 'registry.centos.org']
 ```
 
-После корректировки необходимо рестартовать сервис `podman`:
+После корректировки необходимо рестартовать сервисы `podman` и `crio`:
 ```
 systemctl restart podman
+systemctl restart crio
 ```
 или перегрузить систему.
 
