@@ -774,7 +774,33 @@ kubectl apply -f quay/
 ```
 #### Настройка Loadbalncer'а
 
+В качестве балансировщика нагрузки для доступа с регистратору используется балансировщик 
+API-интерфейсов master-узлов, описанных на странице 
+[ALT Container OS подветка K8S. Создание HA кластера](https://www.altlinux.org/ALT_Container_OS_подветка_K8S._Создание_HA_кластера).
 
+В файл конфигурации `/etc/haproxy/haproxy.conf` добавим `frontend` и `backend` для регистратора на порту `31000` 
+на мастер-узлах:
+```
+frontend registerhttp
+    bind *:80
+    mode tcp
+    option tcplog
+    default_backend registerhttp
+backend registerhttp
+    option httpchk GET /
+    http-check expect status 200
+    mode tcp
+    balance     roundrobin
+        server master01 10.150.0.161:31000 check
+        server master02 10.150.0.162:31000 check
+        server master03 10.150.0.163:31000 check
+```
+
+После перезапуска сервиса `haproxy`:
+```
+systemctl restart haproxy
+```
+необходимо на DNS-сервере поменять привязку домена `altlinux.io` на IP-адрес одного из балансировщиков. 
 
 
 
