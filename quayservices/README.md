@@ -27,7 +27,7 @@ DNS-имя должно быть зарегистрировано  как мин
 $ build.sh
 ```
 Скрипт последовательно вызовет скрипты `build.sh` в каталогах 
-`quay`, `postgres`, `redis` собирая соответсвующие образы.
+`quay`, `postgres`, `redis` собирая соответствующие образы.
 В случае приведенного DNS-имени регистратора `altlinux.io` создадутся образы:
 ```
 altlinux.io/quay/quay
@@ -151,7 +151,8 @@ $ stop.sh
 ### Добавление пользователей
 
 В браузере обратитесь по URL `http://altlinux.io/`.
-> Если порт `80` занят укахите другую привязку порта `8080` в файле `docker-compose.yml` (например `18080`) и укажите порт в URL `http://altlinux.io:18080/`  
+> Если порт `80` занят укажите другую привязку порта `8080` в файле `docker-compose.yml` (например `18080`) 
+> и укажите порт в URL `http://altlinux.io:18080/`  
 
 Кликните клавишу `Create Account`:
 ![](./Images/createAccount.png)
@@ -559,7 +560,7 @@ replicaset.apps/redis-855ccddfd       1         1         1       8s    redis   
 
 При запуске регистратора в режиме конфигурации в физических томах нет необходимости. 
 Поэтому манифесты типа `PersistentVolume` и `PersistentVolumeClaim` не требуются. 
-Манифест разворачивния `redis` описан в файле `quay-config/deployment.yaml`:
+Манифест разворачивния `quay-config` описан в файле `quay-config/deployment.yaml`:
 ```
 apiVersion: apps/v1
 kind: Deployment
@@ -632,7 +633,7 @@ kubectl delete -f quay-config/
 
 #### Запуск сконфигурированного регистратора
 
-Разавхивируйте полученный архив и поемстите содержимое файла `config.yaml` в файл-манифест `quay/quay-configmap.yaml`: 
+Разавхивируйте полученный архив и поместите содержимое файла `config.yaml` в файл-манифест `quay/quay-configmap.yaml`: 
 ```
 apiVersion: v1
 kind: ConfigMap
