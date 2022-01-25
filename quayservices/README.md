@@ -251,7 +251,7 @@ kubectl create ns quay
 
 #### Создание сервиса базы данных postgres
 
-Так как в данном развертывании не используются внешние сетевые тома, то для базы данных (как и в случае `docker-compose`) 
+Так как в данном развертывании не используются внешние сетевые тома, то для базы данных в каталоге `/var/lib/pgsql/` (как и в случае `docker-compose`) 
 необходимо использовать локальный том (каталог) на одном из узлов.
 В данном случае используем тома типа `hostPath`.
 Опишем манифесты типа `PersistentVolume` (описание доступных томов) и PersistentVolumeClaim (запрос на том) в файле
@@ -316,8 +316,8 @@ data:
   POSTGRES_PASSWORD: Htubcnhfnjh
 ```
 `ConfigMap` обеспечивает экспорт переменных `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD`
-в среду запускаемого контейнера. Если в сосент запуска база данных (каталог `/var/lib/quaypostgres`)
-пуста, в базе данных создается указанынй пользователь и база данных. 
+в среду запускаемого контейнера. Если в момент запуска база данных (каталог `/var/lib/quaypostgres`)
+пуста, в базе данных создается указанный пользователь и база данных. 
 
 Манифест разворачивния `postgres` описан в файле
 `postgres/deployment.yaml`:
@@ -357,10 +357,10 @@ spec:
             claimName: postgres-pv-claim
 ```
 Манифест `postgres` с меткой `quay-component=postgres` запускает образ `altlinux.io/quay/postgres`
-на узле `worker03` с томом, удовлетворяющий запросу `claimName=postgres-pv-claim`. Образу при запуске
-будут перезаваться переменные, описанные в `configMap` с именем `postgres-config`.
+на узле `worker03` с томом, удовлетворяющий запросу `claimName=postgres-pv-claim` смонтированным на каталог `/var/lib/pgsql/data`. 
+Образу при запуске будут передаваться переменные, описанные в `configMap` с именем `postgres-config`.
 
-Для поддержки DNS-имени `quaydb` в файле `postgres/service.yaml` описан `CliusterIP`-сервис,
+Для поддержки DNS-имени `quaydb` в файле `postgres/service.yaml` описан `ClusterIP`-сервис,
 привязывающий `POD` с меткой `quay-component=postgres` и портом `5432` к DNS имени `quaydb`:
 ```
 apiVersion: v1
@@ -400,6 +400,134 @@ replicaset.apps/postgres-5cd7f757d6   1         1         1       30s   postgres
 ```
 
 #### Создание сервиса хранилища ключ-значение redis
+
+Так как в данном развертывании не используются внешние сетевые тома, то для хранилища ключ-значение в каталоге `/data/` 
+(как и в случае `docker-compose`) необходимо использовать локальный том (каталог) на одном из узлов.
+В данном случае используем тома типа `hostPath`.
+Опишем манифесты типа `PersistentVolume` (описание доступных томов) и `PersistentVolumeClaim` (запрос на том) в файле
+`redis/storage.yaml`:
+```
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: redis-pv-volume
+  labels:
+    type: local
+    app: redis
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteMany
+  hostPath:
+    path: "/var/lib/quayredis/data"
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: kubernetes.io/hostname
+          operator: In
+          values:
+          - worker02 
+    
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: redis-pv-claim
+  namespace: quay
+  labels:
+    quay-component: redis          
+spec:
+  storageClassName: manual
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 10Gi
+```      
+Манифест `PersistentVolume` описывает ресурс `redis-pv-volume` - каталог `/var/lib/quayredis/data/` на узле `worker03`.
+По параметрам он удовлетворяет запросу `redis-pv-claim`.
+
+Манифест разворачивния `redis` описан в файле `redis/deployment.yaml`:
+```
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis 
+  namespace: quay
+  labels:
+    quay-component: redis
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      quay-component: redis
+  template:
+    metadata:
+      labels:
+        quay-component: redis
+    spec:
+      containers:
+        - name: redis
+          image: altlinux.io/quay/redis
+          imagePullPolicy: "IfNotPresent"
+          ports:
+            - containerPort: 6379
+          volumeMounts:
+            - mountPath: /data
+              name: redisdb
+      volumes:
+        - name: redisdb
+          persistentVolumeClaim:
+            claimName: redis-pv-claim
+```
+Манифест `redis` с меткой `quay-component=redis` запускает образ `altlinux.io/quay/redis`
+на узле `worker02` с томом, удовлетворяющий запросу `claimName=redis-pv-claim` смонтированным на каталог `/data`. 
+
+Для поддержки DNS-имени `quayredis` в файле `redis/service.yaml` описан `ClusterIP`-сервис,
+привязывающий `POD` с меткой `quay-component=redis` и портом `6379` к DNS имени `quayredis`:
+```
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: quay
+  name: quayredis
+  labels:
+    quay-component: redis
+spec:
+  ports:
+    - port: 6379
+      targetPort: 6379
+  selector:
+    quay-component: redis
+```
+
+Все описанные манифесты располагаются в каталоге `redis/` и запускаются командой
+```
+kubectl apply -f redis/
+```
+
+После загрузки и запуска образа `altlinux.io/quay/redis` состояние ресурсов в `namespace` `quay` должно быть следующим:
+```
+# kubectl get all -o wide -n quay  
+NAME                            READY   STATUS    RESTARTS   AGE   IP           NODE       NOMINATED NODE   READINESS GATES
+pod/postgres-5cd7f757d6-4mhrq   1/1     Running   0          72m   10.244.4.3   worker03   <none>           <none>
+pod/redis-855ccddfd-6s5zd       1/1     Running   0          8s    10.244.5.3   worker02   <none>           <none>
+
+NAME                TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)    AGE   SELECTOR
+service/quaydb      ClusterIP   10.103.178.83   <none>        5432/TCP   72m   quay-component=postgres
+service/quayredis   ClusterIP   10.103.37.60    <none>        6379/TCP   8s    quay-component=redis
+
+NAME                       READY   UP-TO-DATE   AVAILABLE   AGE   CONTAINERS   IMAGES                      SELECTOR
+deployment.apps/postgres   1/1     1            1           72m   postgres     altlinux.io/quay/postgres   quay-component=postgres
+deployment.apps/redis      1/1     1            1           8s    redis        altlinux.io/quay/redis      quay-component=redis
+
+NAME                                  DESIRED   CURRENT   READY   AGE   CONTAINERS   IMAGES                      SELECTOR
+replicaset.apps/postgres-5cd7f757d6   1         1         1       72m   postgres     altlinux.io/quay/postgres   pod-template-hash=5cd7f757d6,quay-component=postgres
+replicaset.apps/redis-855ccddfd       1         1         1       8s    redis        altlinux.io/quay/redis      pod-template-hash=855ccddfd,quay-component=redis
+```
 
 #### Запуск регистратора в режиме конфигурации
 
