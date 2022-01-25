@@ -1,0 +1,32 @@
+version: '3.2'
+
+services:
+  quay:
+    image: ${regNS}/quay/quay
+    #command: config Htubcnhfnjh
+    volumes:
+      - quay_config:/quay-registry/conf/stack
+      - quay_datastorage:/datastorage
+    ports:
+      - ${HTTPPORT}:8080
+      - ${HTTPSPORT}:8443
+
+  quayredis:
+    image: ${regNS}/quay/redis
+    volumes:
+      - quay_redis_data:/data
+
+  quaydb:
+    image: ${regNS}/quay/postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - quay_postgres_data:/var/lib/pgsql/data
+
+volumes:
+  quay_config:
+  quay_datastorage:
+  quay_redis_data:
+  quay_postgres_data:
