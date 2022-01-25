@@ -37,6 +37,9 @@ altlinux.io/quay/redis
 
 ## Запуск регистратора quay через docker-compose (минимальная конфигурация)
 
+> Здесь и далее приведен пример разворачивания регистратора в кластере, описанном на странице 
+> [ALT Container OS подветка K8S. Создание HA кластера](https://www.altlinux.org/ALT_Container_OS_подветка_K8S._Создание_HA_кластера)
+
 Запуск регистратора `quay` необходимо провести на одном из узлов кластера (`master` или `worker` не важно).
 Для запуска узел должен иметь не менее `6GB` оперативной памяти и не менее `20GB` дисковой.
 
@@ -660,10 +663,119 @@ data:
 В данном случае используем тома типа `hostPath`.
 Опишем манифесты типа `PersistentVolume` и `PersistentVolumeClaim` в файле
 `quay/storage.yaml`:
+```
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: quay-pv-volume
+  labels:
+    type: local
+    app: quay
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 30Gi
+  accessModes:
+    - ReadWriteMany
+  hostPath:
+    path: "/var/lib/quaystorage/"
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: kubernetes.io/hostname
+          operator: In
+          values:
+          - worker01 
+    
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: quay-pv-claim
+  namespace: quay
+  labels:
+    quay-component: quay          
+spec:
+  storageClassName: manual
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 30Gi
+```
+> В режиме `production` для хранения множества образов размер необходимой дисковой памяти необходимо увеличить. 
 
-Для запуска регистратора создадим файл-манифест ``:
+Для запуска регистратора создадим файл-манифест `quay/deployment.yaml`:
 ```
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: quay
+  name: quay-app
+  labels:
+    quay-component: quay-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      quay-component: quay-app
+  template:
+    metadata:
+      namespace: quay
+      labels:
+        quay-component: quay-app
+    spec:
+      containers:
+      - name: quay-app
+        image: altlinux.io/quay/quay 
+        ports:
+        - containerPort: 8080
+        - containerPort: 8443
+        volumeMounts:
+        - name: config
+          mountPath: /quay-registry/conf/stack/
+        - name: datastorage
+          mountPath: /datastorage/ 
+      volumes:
+      - name: config
+        configMap:
+          name: quay-config
+      - name: datastorage
+        persistentVolumeClaim:
+          claimName: quay-pv-claim
 ```
+> Так как регистратор запускается от имени непривелигированного пользователя `default` после запуска 
+> регистратора не измените права доступа директория `/var/lib/quaystorage/`:
+> `chmod 777 /var/lib/quaystorage/`.
+
+Для обеспечения доступа к регистратору извне из WEB-браузера в файле `quay/service-nodeport.yaml` описывается сервис типа `NodePort`:
+```
+apiVersion: v1
+kind: Service
+metadata:
+  name: quay-service
+  namespace: quay
+spec:
+  ports:
+  - port: 8080
+    targetPort: 8080
+    nodePort: 31000
+  selector:
+    quay-component: quay-app
+  type: NodePort
+```
+Сервис обеспечивает выделение на master-узлах порта ` 31000` и его проброс на порт
+`8080` `POD`а регистратора.
+
+Все описанные манифесты располагаются в каталоге `quay/` и запускаются командой
+```
+kubectl apply -f quay/
+```
+#### Настройка Loadbalncer'а
+
+
+
 
 
 
