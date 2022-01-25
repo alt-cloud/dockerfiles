@@ -1,0 +1,37 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: quay
+  name: quay-app
+  labels:
+    quay-component: quay-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      quay-component: quay-app
+  template:
+    metadata:
+      namespace: quay
+      labels:
+        quay-component: quay-app
+    spec:
+      containers:
+      - name: quay-app
+        image: altlinux.io/quay/quay 
+        ports:
+        - containerPort: 8080
+        - containerPort: 8443
+        volumeMounts:
+        - name: config
+          mountPath: /quay-registry/conf/stack/
+        - name: datastorage
+          mountPath: /datastorage/ 
+      volumes:
+      - name: config
+        configMap:
+          name: quay-config
+      - name: datastorage
+        persistentVolumeClaim:
+          claimName: quay-pv-claim

@@ -1,0 +1,39 @@
+#apiVersion: extensions/v1beta1
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres
+  namespace: quay
+  labels:
+    quay-component: postgres
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      quay-component: postgres
+  template:
+    metadata:
+      labels:
+        quay-component: postgres
+    spec:
+      containers:
+        - name: postgres
+          #image: postgres:10.4
+          image: altlinux.io/quay/postgres
+          #image: altlinux.io/quay/postgres14:p10
+          imagePullPolicy: "IfNotPresent"
+          ports:
+            - containerPort: 5432
+          envFrom:
+            - configMapRef:
+                name: postgres-config
+          volumeMounts:
+                  #- mountPath: /var/lib/postgresql/
+            - mountPath: /var/lib/pgsql/data
+              name: postgredb
+      volumes:
+        - name: postgredb
+          persistentVolumeClaim:
+            claimName: postgres-pv-claim
+
+            

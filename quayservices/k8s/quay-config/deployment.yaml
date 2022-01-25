@@ -1,0 +1,27 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: quay
+  name: quay-config-app
+  labels:
+    quay-component: config-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      quay-component: config-app
+  template:
+    metadata:
+      namespace: quay
+      labels:
+        quay-component: config-app
+    spec:
+      containers:
+      - name: quay-config-app
+        image: altlinux.io/quay/quay 
+        ports:
+        - containerPort: 8080
+        - containerPort: 8443
+        command: ["/quay-registry/quay-entrypoint.sh"]
+        args: ["config", "Htubcnhfnjh"]

@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: quay
+  name: quaydb
+  labels:
+    quay-component: postgres
+spec:
+  ports:
+    - port: 5432
+      targetPort: 5432
+  selector:
+    quay-component: postgres
+
