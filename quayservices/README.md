@@ -383,6 +383,16 @@ spec:
 ```
 kubectl apply -f postgres/
 ```
+После запуска проверьте выделение томов командами:
+```
+# kubectl get persistentvolumes -o wide
+NAME              CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS   CLAIM                    STORAGECLASS   REASON   AGE    VOLUMEMODE
+pg-pv-volume      10Gi       RWX            Retain           Bound    quay/postgres-pv-claim   manual                  3h4m   Filesystem
+[root@master01 quay]# kubectl get persistentvolumeclaims -n quay -o wide
+NAME                STATUS   VOLUME            CAPACITY   ACCESS MODES   STORAGECLASS   AGE    VOLUMEMODE
+postgres-pv-claim   Bound    pg-pv-volume      10Gi       RWX            manual         3h4m   Filesystem
+```
+Статус обоих манифестов должен быть `Bound`.
 
 После загрузки и запуска образа `altlinux.io/quay/postgres` состояние ресурсов в `namespace` `quay` должно быть следующим:
 ```
@@ -509,6 +519,18 @@ spec:
 ```
 kubectl apply -f redis/
 ```
+После запуска проверьте выделение томов командами:
+```
+# kubectl get persistentvolumes -o wide
+NAME              CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS   CLAIM                    STORAGECLASS   REASON   AGE    VOLUMEMODE
+...
+redis-pv-volume   10Gi       RWX            Retain           Bound    quay/redis-pv-claim      manual                  112m   Filesystem
+[root@master01 quay]# kubectl get persistentvolumeclaims -n quay -o wide
+NAME                STATUS   VOLUME            CAPACITY   ACCESS MODES   STORAGECLASS   AGE    VOLUMEMODE
+...
+redis-pv-claim      Bound    redis-pv-volume   10Gi       RWX            manual         112m   Filesystem
+```
+Статус обоих манифестов должен быть `Bound`.
 
 После загрузки и запуска образа `altlinux.io/quay/redis` состояние ресурсов в `namespace` `quay` должно быть следующим:
 ```
@@ -566,7 +588,7 @@ spec:
 При запуске стартовому скрипту контейнера передаются параметры `config Htubcnhfnjh`.
 В этом режиме регистратор поддерживает интерфейс конфигурации, описанный выше.
 
-Для обечпечения доступа к регистратору извне из WEB-браузера в файле `quay-config/service-nodeport.yaml` описывается сервис типа `NodePort`:
+Для обеспечения доступа к регистратору извне из WEB-браузера в файле `quay-config/service-nodeport.yaml` описывается сервис типа `NodePort`:
 ```
 apiVersion: v1
 kind: Service
@@ -583,6 +605,12 @@ spec:
 ```
 Сервис обеспечивает выделение на master-узлах порта в диапазоне ` 30000-32767` и его проброс на порт
 `8080` `POD`а регистратора.
+
+
+Все описанные манифесты располагаются в каталоге `quay-config/` и запускаются командой
+```
+kubectl apply -f quay-config/
+```
 Узнать номер выделенного порта можно командой:
 ```
 # kubectl get svc -o wide -n quay  | grep quay-config-service-np
@@ -592,10 +620,45 @@ quay-config-service-np   NodePort    10.102.8.32     <none>        8080:31945/TC
 Где `<master_IP>` - IP-адрес одного из master-узлов.
 
 Процесс конфигурирования описан выше в разделе запуска регистратора в `docker-compose`-режиме.
-После конфигурироваия скачайте архив конфигурации `quay-config.tar.gz`.
+После конфигурирования скачайте архив конфигурации `quay-config.tar.gz`.
 
 #### Запуск сконфигурированного регистратора
 
+Разавхивируйте полученный архив и поемстите содержимое файла `config.yaml` в файл-манифест `quay/quay-configmap.yaml`: 
+```
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: quay-config
+  namespace: quay
+data:
+  config.yaml: |
+    AUTHENTICATION_TYPE: Database
+    AVATAR_KIND: local
+    BUILDLOGS_REDIS:
+        host: quayredis
+        port: 6379
+    DATABASE_SECRET_KEY: 0882a0a3-a6a4-4bcc-b57b-4d68bf3d63d4
+    DB_CONNECTION_ARGS: {}
+    DB_URI: postgresql://quayuser:Htubcnhfnjh@quaydb/registry
+    DEFAULT_TAG_EXPIRATION: 2w
+    DISTRIBUTED_STORAGE_CONFIG:
+        default:
+            - LocalStorage
+            - storage_path: /datastorage/registry
+    ...
+```
+
+Регистратор хранит слои и метаинформацию по образам в каталоге `/datastorage/`.
+Так как в данном развертывании не используются внешние сетевые тома, то для каталога `/datastorage/` 
+(как и в случае `docker-compose`) необходимо использовать локальный том (каталог) на одном из узлов.
+В данном случае используем тома типа `hostPath`.
+Опишем манифесты типа `PersistentVolume` и `PersistentVolumeClaim` в файле
+`quay/storage.yaml`:
+
+Для запуска регистратора создадим файл-манифест ``:
+```
+```
 
 
 
