@@ -18,10 +18,11 @@ spec:
         quay-component: config-app
     spec:
       containers:
-      - name: quay-config-app
-        image: altlinux.io/quay/quay 
-        ports:
-        - containerPort: 8080
-        - containerPort: 8443
-        command: ["/quay-registry/quay-entrypoint.sh"]
-        args: ["config", "Htubcnhfnjh"]
+        - name: quay-config-app
+          imagePullPolicy: "IfNotPresent"
+          image: altlinux.io/quay/quay
+          ports:
+          - containerPort: 8080
+          - containerPort: 8443
+          command: ["/quay-registry/quay-entrypoint.sh"]
+          args: ["config", "Htubcnhfnjh"]

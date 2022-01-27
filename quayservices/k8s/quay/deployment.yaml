@@ -18,20 +18,21 @@ spec:
         quay-component: quay-app
     spec:
       containers:
-      - name: quay-app
-        image: altlinux.io/quay/quay 
-        ports:
-        - containerPort: 8080
-        - containerPort: 8443
-        volumeMounts:
-        - name: config
-          mountPath: /quay-registry/conf/stack/
-        - name: datastorage
-          mountPath: /datastorage/ 
+        - name: quay-app
+          image: altlinux.io/quay/quay
+          imagePullPolicy: "IfNotPresent"
+          ports:
+          - containerPort: 8080
+          - containerPort: 8443
+          volumeMounts:
+          - name: config
+            mountPath: /quay-registry/conf/stack/
+          - name: datastorage
+            mountPath: /datastorage/
       volumes:
-      - name: config
-        configMap:
-          name: quay-config
-      - name: datastorage
-        persistentVolumeClaim:
-          claimName: quay-pv-claim
+        - name: config
+          configMap:
+            name: quay-config
+        - name: datastorage
+          persistentVolumeClaim:
+            claimName: quay-pv-claim
