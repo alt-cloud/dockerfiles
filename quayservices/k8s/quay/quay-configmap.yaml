@@ -5,6 +5,7 @@ metadata:
   namespace: quay
 data: 
   config.yaml: | 
+    ALLOW_PULLS_WITHOUT_STRICT_LOGGING: true
     AUTHENTICATION_TYPE: Database
     AVATAR_KIND: local
     BUILDLOGS_REDIS:
