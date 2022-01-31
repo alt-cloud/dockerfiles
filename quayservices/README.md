@@ -806,13 +806,94 @@ backend registerhttp
 ```
 systemctl restart haproxy
 ```
-необходимо на DNS-сервере поменять привязку домена `altlinux.io` на IP-адрес одного из балансировщиков. 
+необходимо на DNS-сервере поменять привязку домена `altlinux.io` на виртуальный IP-адрес балансировщика. 
 
+## Добавление поддержки SSL (HTTPS)
 
+Для доступа к регистратору по протоколу `https` необходимо сгенерировать самоподписный сертификат.
+Подробная инструкция по генерации сертификата описана на странце [Chapter 4. Using SSL to protect connections to Red Hat Quay](https://access.redhat.com/documentation/en-us/red_hat_quay/3.6/html-single/manage_red_hat_quay/index#using-ssl-to-protect-quay).
+После генерации поместим закрытый ключ и сертификат в файл-манифест `quay/quay-configmap.yaml`: 
+```
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: quay-config
+  namespace: quay
+data:
+  config.yaml: |
+    ...
+    PREFERRED_URL_SCHEME: https
+    ...
+  ssl.key: |
+    -----BEGIN RSA PRIVATE KEY-----
+    ...
+      -----END RSA PRIVATE KEY-----
+  ssl.cert: |
+    ...
+    -----END CERTIFICATE-----
+```
+и изменим значение параметра `PREFERRED_URL_SCHEME` с `http` на `https`.
+
+В манифест описания сервиса добавим доступ по порту `https`(`8443`) через порт `31001`. 
+```
+apiVersion: v1
+kind: Service
+metadata:
+  name: quay-service
+  namespace: quay
+spec:
+  ports:
+  - name: http
+    port: 8080
+    targetPort: 8080
+    nodePort: 31000
+  - name: https
+    port: 8443
+    targetPort: 8443
+    nodePort: 31001
+  selector:
+    quay-component: quay-app
+  type: NodePort
+```
+Перезапустим через `kubectl apply` измененные манифесты.
+
+В файл конфигурации `/etc/haproxy/haproxy.conf` добавим `frontend` и `backend` для регистратора на `https`-порту `31001` 
+на мастер-узлах:
+```
+frontend registerhttps
+    bind *:443
+    mode tcp
+    option tcplog
+    default_backend registerhttps
+
+backend registerhttps
+    mode tcp
+    balance     roundrobin
+        server master01 10.150.0.161:31001 check
+        server master02 10.150.0.162:31001 check
+        server master03 10.150.0.163:31001 check
+
+```
+
+Для обеспечении доступа через `podman`  передадим на клиентскую машину корневой CA файл `rootCA.pem`,
+создадим каталог по имени DNS quay-серера: `cp rootCA.pem /etc/containers/certs.d/quay-server.example.com/ca.crt`
+и скопируем файл `rootCA.pem` в созданный каталог:
+```
+mkdir /etc/containers/certs.d/altlinux.io
+cp rootCA.pem /etc/containers/certs.d/altlinux.io/ca.crt
+```
+
+Для корректной работы через браузер передадим на клиентскую машину корневой CA файл `rootCA.pem`, 
+скопируем его в каталог `/etc/pki/ca-trust/source/anchors/`
+и обновим список сертификатов:
+```
+cp rootCA.pem /etc/pki/ca-trust/source/anchors/
+update-ca-trust extract
+```
 
 
 ## Ссылки
 
 - [How to manage Linux container registries](https://www.redhat.com/sysadmin/manage-container-registries)
-
+- [Chapter 4. Using SSL to protect connections to Red Hat Quay](https://access.redhat.com/documentation/en-us/red_hat_quay/3.6/html-single/manage_red_hat_quay/index#using-ssl-to-protect-quay)
 
