@@ -55,16 +55,16 @@ export PLATFORMS=sisyphus
 Примеры вызова скрипта:
 - Размещение всех доступных образов
 ```
-./build.sh
+./push.sh
 ```
 - Размещение образов 13, 14:
 ```
-./build.sh 13 14
+./push.sh 13 14
 ```
 - Размещение образов для платформы `sisyphus`:
 ```
 export PLATFORMS=sisyphus
-./build.sh
+./push.sh
 ```
 
 ## Описание образов postgres
